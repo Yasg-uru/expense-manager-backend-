@@ -78,46 +78,116 @@ export const getTotalexpense = catchAsync(
     }
   }
 );
-export const getexpenseofprevousweek = catchAsync(
+// export const getexpenseofprevousweek = catchAsync(
+//   async (req: RequestWithUser, res: Response, next: NextFunction) => {
+//     try {
+//       const userid = req.user?._id;
+
+//       const currentdate: Date = new Date();
+//       const startofpreviousweek = new Date(
+//         currentdate.getFullYear(),
+//         currentdate.getMonth(),
+//         currentdate.getDay() - 7
+//       );
+//       const endofpreviousweek = new Date(
+//         currentdate.getFullYear(),
+//         currentdate.getMonth(),
+//         currentdate.getDay() - 1
+//       );
+//       const expenses = await Expense.find({
+//         userId: userid,
+//         date: { $gte: startofpreviousweek, $lte: endofpreviousweek },
+//       });
+//       if (!expenses) {
+//         return next(new Errorhandler(404, "expense not found "));
+//       }
+//       let Toatlexpense: number = 0;
+
+//       const expense_category: any = {};
+//       expenses.forEach((expense) => {
+//         if (!expense_category[expense.category]) {
+//           expense_category[expense.category] = expense.amount;
+//         } else {
+//           expense_category[expense.category] += expense.amount;
+//         }
+//         Toatlexpense += expense.amount;
+//       });
+//       res.status(200).json({
+//         success: true,
+
+//         message: "fetched your previous week expense ",
+//         category: expense_category,
+//         Toatlexpense,
+//         expenses,
+//       });
+//     } catch (error) {
+//       return next(new Errorhandler(500, "Internal server error"));
+//     }
+//   }
+// );
+export const getExpenseByWeek = catchAsync(
   async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
-      const userid = req.user?._id;
+      const userId = req.user?._id;
+      const currentdate = new Date();
 
-      const currentdate: Date = new Date();
-      const startofpreviousweek = new Date(
-        currentdate.getFullYear(),
-        currentdate.getMonth(),
-        currentdate.getDay() - 7
-      );
-      const endofpreviousweek = new Date(
-        currentdate.getFullYear(),
-        currentdate.getMonth(),
-        currentdate.getDay() - 1
-      );
-      const expenses = await Expense.find({
-        userId: userid,
-        date: { $gte: startofpreviousweek, $lte: endofpreviousweek },
-      });
-      if (!expenses) {
-        return next(new Errorhandler(404, "expense not found "));
+      const selectedWeekString = req.query.week?.toString();
+      if (!selectedWeekString) {
+        return next(new Errorhandler(400, "Missing 'week' query parameter."));
       }
-      let Toatlexpense: number = 0;
 
-      const expense_category: any = {};
-      expenses.forEach((expense) => {
-        if (!expense_category[expense.category]) {
-          expense_category[expense.category] = expense.amount;
-        } else {
-          expense_category[expense.category] += expense.amount;
-        }
-        Toatlexpense += expense.amount;
+      const selectedWeek = parseInt(selectedWeekString, 10);
+      if (!selectedWeek || selectedWeek < 1 || selectedWeek > 3) {
+        return next(
+          new Errorhandler(400, "Invalid week selection. Choose 1, 2, or 3.")
+        );
+      }
+
+      const offsetWeeks = selectedWeek - 1; // Calculate offset based on selected week
+
+      const startofWeek = new Date(
+        currentdate.getFullYear(),
+        currentdate.getMonth(),
+        currentdate.getDate() - (currentdate.getDay() || 7) - offsetWeeks * 7
+      );
+      startofWeek.setHours(0, 0, 0, 0); // Set start of week to midnight
+
+      const endofWeek = new Date(startofWeek.getTime());
+      endofWeek.setDate(endofWeek.getDate() + 6); // Set end of week to next Saturday night
+      endofWeek.setHours(23, 59, 59, 999); // Set end of week to 11:59pm on Saturday
+
+      const expenses = await Expense.find({
+        userId,
+        date: { $gte: startofWeek, $lte: endofWeek },
       });
+
+      if (!expenses || expenses.length === 0) {
+        return res.status(200).json({
+          success: true,
+          message: "No expenses found for the selected week.",
+          category: {},
+          Toatlexpense: 0,
+          expenses: [],
+        });
+      }
+
+      let totalExpense = 0;
+      const expenseCategory: { [key: string]: number } = {};
+
+      expenses.forEach((expense) => {
+        if (!expenseCategory[expense.category]) {
+          expenseCategory[expense.category] = expense.amount;
+        } else {
+          expenseCategory[expense.category] += expense.amount;
+        }
+        totalExpense += expense.amount;
+      });
+
       res.status(200).json({
         success: true,
-
-        message: "fetched your previous week expense ",
-        category: expense_category,
-        Toatlexpense,
+        message: `Fetched your expenses for the previous ${selectedWeek} week(s).`,
+        category: expenseCategory,
+        totalExpense,
         expenses,
       });
     } catch (error) {
@@ -125,6 +195,7 @@ export const getexpenseofprevousweek = catchAsync(
     }
   }
 );
+
 export const getexpensebymonth = catchAsync(
   async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {

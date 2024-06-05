@@ -7,7 +7,7 @@ const router = Router();
 router.post('/create',isAuthenticated,createExpense);
 router.get('/prevweek',isAuthenticated,getExpenseByWeek);
 router.get('/monthly',isAuthenticated,getexpensebymonth);
-router.get('/totalexpenseyearly',isAuthenticated,getfullyearreport);
+router.get('/report',isAuthenticated,getfullyearreport);
 
 
 

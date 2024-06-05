@@ -238,46 +238,134 @@ export const getexpensebymonth = catchAsync(
     }
   }
 );
+// export const getfullyearreport = catchAsync(
+//   async (req: RequestWithUser, res: Response, next: NextFunction) => {
+//     try {
+//       const { year } = req.body;
+//       if (!year) {
+//         return next(new Errorhandler(404, "invalid year"));
+//       }
+//       let totalexpense = 0;
+//       const yearlyExpensesByCategory: any = {};
+//       const userId = req.user?._id;
+
+//       // Iterate over each month of the year
+//       for (let month = 0; month < 12; month++) {
+//         // Calculate the start and end dates for the current month
+//         const startDate = new Date(year, month, 1);
+//         const endDate = new Date(year, month + 1, 0);
+
+//         // Find all expenses for the user within the current month
+//         const expenses = await Expense.find({
+//           userId,
+//           date: { $gte: startDate, $lte: endDate },
+//         });
+
+//         // Calculate total expenses by category for the current month
+//         expenses.forEach((expense) => {
+//           if (!yearlyExpensesByCategory[expense.category]) {
+//             yearlyExpensesByCategory[expense.category][month] = Array(12).fill(0);
+//           }
+//           yearlyExpensesByCategory[expense.category][month] += expense.amount;
+//           totalexpense += expense.amount;
+//         });
+//       }
+//       res.status(200).json({
+//         success: true,
+//         message: "fetched your yearly details",
+//         yearlyExpensesByCategory,
+//         totalexpense,
+//       });
+//     } catch (error) {
+//       return next(new Errorhandler(500, "internal server Error"));
+//     }
+//   }
+// );
 export const getfullyearreport = catchAsync(
   async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const { year } = req.body;
       if (!year) {
-        return next(new Errorhandler(404, "invalid year"));
+        return next(new Errorhandler(404, "Invalid year"));
       }
-      let totalexpense = 0;
-      const yearlyExpensesByCategory: any = {};
+
+      let totalExpense = 0;
+      const yearlyExpensesByDay: {
+        [month: string]: { [day: number]: number };
+      } = {}; // Nested object for daily expenses
       const userId = req.user?._id;
 
       // Iterate over each month of the year
+      const monthNames = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ]; // Month names array
+
       for (let month = 0; month < 12; month++) {
-        // Calculate the start and end dates for the current month
+        // Calculate the start and end dates for the current month, handling leap year
         const startDate = new Date(year, month, 1);
         const endDate = new Date(year, month + 1, 0);
+        endDate.setDate(
+          endDate.getDate() +
+            (endDate.getMonth() === 1 && endDate.getDate() === 29 ? 1 : 0)
+        ); // Adjust for leap year in February
 
-        // Find all expenses for the user within the current month
-        const expenses = await Expense.find({
-          userId,
-          date: { $gte: startDate, $lte: endDate },
-        });
+        yearlyExpensesByDay[monthNames[month]] = {}; // Initialize empty object for the month
 
-        // Calculate total expenses by category for the current month
-        expenses.forEach((expense) => {
-          if (!yearlyExpensesByCategory[expense.category]) {
-            yearlyExpensesByCategory[expense.category] = Array(12).fill(0);
-          }
-          yearlyExpensesByCategory[expense.category][month] += expense.amount;
-          totalexpense += expense.amount;
-        });
+        // Iterate over each day of the current month
+        for (let day = 1; day <= endDate.getDate(); day++) {
+          const dayStart = new Date(year, month, day);
+          const dayEnd = new Date(dayStart.getTime());
+          dayEnd.setDate(dayEnd.getDate() + 1); // Set end of day to next day at midnight
+
+          // Find expenses for the user within the current day
+          const expenses = await Expense.find({
+            userId,
+            date: { $gte: dayStart, $lte: dayEnd },
+          });
+
+          const dayTotal = expenses.reduce(
+            (acc, expense) => acc + expense.amount,
+            0
+          ); // Calculate daily total expense
+
+          yearlyExpensesByDay[monthNames[month]][day] = dayTotal; // Add daily expense to object
+        }
       }
+
+      totalExpense = calculateTotalExpense(yearlyExpensesByDay); // Function to calculate total expense from nested object
+
       res.status(200).json({
         success: true,
-        message: "fetched your yearly details",
-        yearlyExpensesByCategory,
-        totalexpense,
+        message: "Fetched your yearly details",
+        yearlyExpensesByDay,
+        totalExpense,
       });
     } catch (error) {
-      return next(new Errorhandler(500, "internal server Error"));
+      return next(new Errorhandler(500, "Internal server error"));
     }
   }
 );
+
+// Function to calculate total expense from nested object (optional)
+function calculateTotalExpense(yearlyExpensesByDay: {
+  [month: string]: { [day: number]: number };
+}): number {
+  let total = 0;
+  for (const month in yearlyExpensesByDay) {
+    for (const day in yearlyExpensesByDay[month]) {
+      total += yearlyExpensesByDay[month][day];
+    }
+  }
+  return total;
+}

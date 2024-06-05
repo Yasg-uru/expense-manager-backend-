@@ -12,7 +12,7 @@ export const createbudget = catchAsync(
     try {
       const userId = req.user?._id;
       const existingbudget = await Budget.find(req.body);
-      if (existingbudget) {
+      if (existingbudget.length !== 0) {
         return next(
           new Errorhandler(
             400,
@@ -108,15 +108,19 @@ export const generatemonthlyReport = catchAsync(
         },
         category,
       };
+      console.log(`this is budget querry:`, budgetquery);
+      console.log(`this is expense query:`, expensequery);
 
-      const expenses = await Expense.find(budgetquery);
-      const budgets = await Budget.findOne(expensequery);
+      const expenses = await Expense.find(expensequery);
+      const budgets = await Budget.findOne(budgetquery);
+      console.log(`this is expenses :`, expenses);
+      console.log(`this is budgets:`, budgets);
       if (!budgets || !expenses) {
         return next(
           new Errorhandler(404, "expense or budget is not exist for this query")
         );
       }
-      let budgetamount: number = budgets.actualSpent;
+      let budgetlimit: number = budgets.limit;
 
       let totalexpense: number = 0;
       const expensebycategory: { [key: string]: number } = {};
@@ -129,13 +133,14 @@ export const generatemonthlyReport = catchAsync(
           expensebycategory[expense.category] += expense.amount;
         }
       });
-      const percentageUsage = (totalexpense / budgetamount) * 100;
+      const percentageUsage = (totalexpense / budgetlimit) * 100;
+
       res.status(200).json({
         success: true,
         message: "successfully",
-        budgetamount,
+        budgetlimit,
         expensebycategory,
-        remainingbudget: totalexpense - budgetamount,
+        remainingbudget: budgetlimit - totalexpense,
         percentageUsage,
       });
     } catch (error) {
@@ -143,5 +148,3 @@ export const generatemonthlyReport = catchAsync(
     }
   }
 );
-
-// export const

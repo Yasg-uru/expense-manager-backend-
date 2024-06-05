@@ -1,12 +1,15 @@
-import  { Schema, model } from "mongoose";
+import { Schema, model,Types } from "mongoose";
 import validator from "validator";
 
 export interface Iuser extends Document {
+  _id: Types.ObjectId;
+
   name: string;
   email: string;
   password: string;
   role: "user" | "admin";
   profileurl: string;
+  currency: string;
 }
 const userschema = new Schema<Iuser>({
   name: {
@@ -37,7 +40,11 @@ const userschema = new Schema<Iuser>({
   profileurl: {
     type: String,
   },
+  currency: {
+    type: String,
+    default: "USD",
+  },
 });
 
-const usermodel=model("User",userschema);
+const usermodel = model("User", userschema);
 export default usermodel;

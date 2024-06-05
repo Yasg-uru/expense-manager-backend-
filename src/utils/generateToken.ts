@@ -1,10 +1,19 @@
 import jwt from "jsonwebtoken";
-import { ObjectId } from "mongoose";
+import { Iuser } from "../models/User.model";
 
-const generatetoken = async (id:any) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET as string, {
-    expiresIn: process.env.JWT_EXPIRE,
-  });
+const generatetoken = async (user: Iuser) => {
+  return jwt.sign(
+    {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
+    process.env.JWT_SECRET as string,
+    {
+      expiresIn: process.env.JWT_EXPIRE,
+    }
+  );
 };
 
 export default generatetoken;

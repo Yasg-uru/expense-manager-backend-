@@ -2,7 +2,7 @@ import { Response } from "express";
 import { Iuser } from "../models/User.model";
 const sendtoken = (
   res: Response,
-  token: String,
+  token: string,
   statuscode: number,
   user: Iuser
 ) => {

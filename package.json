@@ -4,12 +4,10 @@
   "description": "creating expense manager website ",
   "main": "dist/index.js",
   "scripts": {
-    "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
-    "build": "tsc",
-    "watch": "tsc -w",
-    "prestart": "npm run build",
-    "start": "nodemon .",
-    "dev": "npx concurrently  --kill-others \"npm run watch\" \" npm start\" "
+    "build": "npx tsc",
+    "test": "jest",
+    "start": "node dist/index.js",
+    "dev": "nodemon src/index.ts"
   },
   "author": "yash choudhary",
   "license": "ISC",
@@ -34,6 +32,7 @@
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "dotenv": "^16.4.5",
+    "express-validator": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.4.1",
     "multer": "^1.4.5-lts.1",

@@ -1,4 +1,4 @@
-import User, { Iuser } from "../models/User.model";
+import User from "../models/User.model";
 import { Request, Response } from "express";
 
 import bcrypt from "bcryptjs";
@@ -13,7 +13,7 @@ export const registeruser = async (req: Request, res: Response) => {
     email,
     password: hashedpassword,
   });
-  const gettoken = await generatetoken(user._id);
+  const gettoken = await generatetoken(user);
 
   sendtoken(res, gettoken, 200, user);
 };
@@ -26,7 +26,7 @@ export const login = async (req: Request, res: Response) => {
         message: "please enter email or password",
       });
     }
-    const user = await User.findOne({ email: email });
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({
         message: "Invalid credentials",
@@ -38,7 +38,7 @@ export const login = async (req: Request, res: Response) => {
         message: "Invalid email or password",
       });
     }
-    const gettoken = await generatetoken(user._id);
+    const gettoken = await generatetoken(user);
     sendtoken(res,gettoken,200,user);
   } catch (error) {
     res.status(500).json({
@@ -46,20 +46,20 @@ export const login = async (req: Request, res: Response) => {
     });
   }
 };
-export async function logout(req:Request,res:Response){
+export async function logout(res:Response){
   try {
      res.cookie("token",null,{
       expires:new Date(0),
 
       httpOnly:true
-    })
+    });
     res.status(200).json({
       success:true,
       message:"Logged out successfully"
-    })
+    });
   } catch (error) {
     res.status(500).json({
       message:"internal server error "
-    })
+    });
   }
 }

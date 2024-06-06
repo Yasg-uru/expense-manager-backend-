@@ -132,11 +132,16 @@ export const getExpenseByWeek = catchAsync(
       const currentdate = new Date();
 
       const selectedWeekString = req.query.week?.toString();
+      const pagenumber = req.query.page?.toString() || "1";
+
       if (!selectedWeekString) {
         return next(new Errorhandler(400, "Missing 'week' query parameter."));
       }
 
       const selectedWeek = parseInt(selectedWeekString, 10);
+      const page = parseInt(pagenumber);
+      const skip: number = (page - 1) * 10;
+
       if (!selectedWeek || selectedWeek < 1 || selectedWeek > 3) {
         return next(
           new Errorhandler(400, "Invalid week selection. Choose 1, 2, or 3.")
@@ -159,8 +164,14 @@ export const getExpenseByWeek = catchAsync(
       const expenses = await Expense.find({
         userId,
         date: { $gte: startofWeek, $lte: endofWeek },
+      })
+        .limit(10)
+        .skip(skip);
+      const totalexpensecounts = await Expense.countDocuments({
+        userId,
+        date: { $gte: startofWeek, $lte: endofWeek },
       });
-
+      const totalPages = Math.ceil(totalexpensecounts / 10);
       if (!expenses || expenses.length === 0) {
         return res.status(200).json({
           success: true,
@@ -188,6 +199,7 @@ export const getExpenseByWeek = catchAsync(
         message: `Fetched your expenses for the previous ${selectedWeek} week(s).`,
         category: expenseCategory,
         totalExpense,
+        totalPages,
         expenses,
       });
     } catch (error) {

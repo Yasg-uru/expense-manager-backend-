@@ -208,6 +208,57 @@ export const getExpenseByWeek = catchAsync(
   }
 );
 
+export const getweeklyExpenseReportforGraph = catchAsync(
+  async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user?._id;
+      const currentdate = new Date();
+
+      const selectedWeekString = req.query.week?.toString();
+      const pagenumber = req.query.page?.toString() || "1";
+
+      if (!selectedWeekString) {
+        return next(new Errorhandler(400, "Missing 'week' query parameter."));
+      }
+
+      const selectedWeek = parseInt(selectedWeekString, 10);
+      if (!selectedWeek || selectedWeek < 1 || selectedWeek > 3) {
+        return next(
+          new Errorhandler(400, "Invalid week selection. Choose 1, 2, or 3.")
+        );
+      }
+      const offsetWeeks = selectedWeek - 1; // Calculate offset based on selected week
+
+      const startofWeek = new Date(
+        currentdate.getFullYear(),
+        currentdate.getMonth(),
+        currentdate.getDate() - (currentdate.getDay() || 7) - offsetWeeks * 7
+      );
+      startofWeek.setHours(0, 0, 0, 0); // Set start of week to midnight
+
+      const endofWeek = new Date(startofWeek.getTime());
+      endofWeek.setDate(endofWeek.getDate() + 6); // Set end of week to next Saturday night
+      endofWeek.setHours(23, 59, 59, 999);
+      const Expenses = await Expense.find({
+        userId,
+        date: { $gte: startofWeek, $lte: endofWeek },
+      });
+      if (!Expenses) {
+        return next(new Errorhandler(404, "Expenses Not Found"));
+      }
+      res.status(200).json({
+        success: true,
+        message: "fetched your weekly report ",
+        Expenses,
+      });
+    } catch (error) {
+      res.status(200).json({
+        success: false,
+        message: "Internal server error",
+      });
+    }
+  }
+);
 export const getexpensebymonth = catchAsync(
   async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {

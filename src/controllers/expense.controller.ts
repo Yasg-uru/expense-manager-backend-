@@ -286,9 +286,14 @@ export const getexpensebymonth = catchAsync(
       })
         .limit(10)
         .skip(skip);
+
       if (!expenses) {
         return next(new Errorhandler(404, "expense not found "));
       }
+      const Expenses = await Expense.find({
+        userId: userid,
+        date: { $gte: startdateofmonth, $lte: enddateofmonth },
+      });
       const Total_expense_count = await Expense.countDocuments({
         userId: userid,
         date: { $gte: startdateofmonth, $lte: enddateofmonth },
@@ -298,7 +303,7 @@ export const getexpensebymonth = catchAsync(
       const expense_category: any = {};
       let totalexpense: number = 0;
 
-      expenses.forEach((expense) => {
+      Expenses.forEach((expense) => {
         if (!expense_category[expense.category]) {
           expense_category[expense.category] = expense.amount;
         } else {
@@ -335,7 +340,6 @@ export const Get_Expense_monthly_Graph = catchAsync(
         return next(new Errorhandler(404, "Invalid Month or Year"));
       }
       const userid = req.user?._id;
-      
 
       const startdateofmonth = new Date(year, month - 1, 1);
       const enddateofmonth = new Date(year, month, 0);
@@ -346,8 +350,6 @@ export const Get_Expense_monthly_Graph = catchAsync(
       if (!expenses) {
         return next(new Errorhandler(404, "expense not found "));
       }
-      
-    
 
       const expense_category: any = {};
       let totalexpense: number = 0;
@@ -366,7 +368,6 @@ export const Get_Expense_monthly_Graph = catchAsync(
         totalexpense,
         expense_category,
         expenses,
-        
       });
     } catch (error) {
       return next(new Errorhandler(500, "Internal server Error"));

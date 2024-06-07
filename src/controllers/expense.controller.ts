@@ -215,7 +215,6 @@ export const getweeklyExpenseReportforGraph = catchAsync(
       const currentdate = new Date();
 
       const selectedWeekString = req.query.week?.toString();
-      const pagenumber = req.query.page?.toString() || "1";
 
       if (!selectedWeekString) {
         return next(new Errorhandler(400, "Missing 'week' query parameter."));
@@ -262,22 +261,40 @@ export const getweeklyExpenseReportforGraph = catchAsync(
 export const getexpensebymonth = catchAsync(
   async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
-      const { year, month } = req.body;
+      const yeart = req.query.year?.toString();
+      const montht = req.query.month?.toString();
+      if (!montht || !yeart) {
+        return next(new Errorhandler(404, "please Select year and month"));
+      }
+      const month = parseInt(montht);
+      const year = parseInt(yeart);
+
       //validation for years and month
       if (!year || !month || month < 1 || month > 12) {
         return next(new Errorhandler(404, "Invalid Month or Year"));
       }
       const userid = req.user?._id;
+      const page = req.query.page?.toString() || "1";
+      const pagenumber = parseInt(page);
+      const skip = (pagenumber - 1) * 10;
 
       const startdateofmonth = new Date(year, month - 1, 1);
       const enddateofmonth = new Date(year, month, 0);
       const expenses = await Expense.find({
         userId: userid,
         date: { $gte: startdateofmonth, $lte: enddateofmonth },
-      });
+      })
+        .limit(10)
+        .skip(skip);
       if (!expenses) {
         return next(new Errorhandler(404, "expense not found "));
       }
+      const Total_expense_count = await Expense.countDocuments({
+        userId: userid,
+        date: { $gte: startdateofmonth, $lte: enddateofmonth },
+      });
+      const Totalpages = Math.ceil(Total_expense_count / 10);
+
       const expense_category: any = {};
       let totalexpense: number = 0;
 
@@ -295,6 +312,61 @@ export const getexpensebymonth = catchAsync(
         totalexpense,
         expense_category,
         expenses,
+        Totalpages,
+      });
+    } catch (error) {
+      return next(new Errorhandler(500, "Internal server Error"));
+    }
+  }
+);
+export const Get_Expense_monthly_Graph = catchAsync(
+  async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const yeart = req.query.year?.toString();
+      const montht = req.query.month?.toString();
+      if (!montht || !yeart) {
+        return next(new Errorhandler(404, "please Select year and month"));
+      }
+      const month = parseInt(montht);
+      const year = parseInt(yeart);
+
+      //validation for years and month
+      if (!year || !month || month < 1 || month > 12) {
+        return next(new Errorhandler(404, "Invalid Month or Year"));
+      }
+      const userid = req.user?._id;
+      
+
+      const startdateofmonth = new Date(year, month - 1, 1);
+      const enddateofmonth = new Date(year, month, 0);
+      const expenses = await Expense.find({
+        userId: userid,
+        date: { $gte: startdateofmonth, $lte: enddateofmonth },
+      });
+      if (!expenses) {
+        return next(new Errorhandler(404, "expense not found "));
+      }
+      
+    
+
+      const expense_category: any = {};
+      let totalexpense: number = 0;
+
+      expenses.forEach((expense) => {
+        if (!expense_category[expense.category]) {
+          expense_category[expense.category] = expense.amount;
+        } else {
+          expense_category[expense.category] += expense.amount;
+        }
+        totalexpense += expense.amount;
+      });
+      res.status(200).json({
+        success: true,
+        message: "fetched your monthly expense ",
+        totalexpense,
+        expense_category,
+        expenses,
+        
       });
     } catch (error) {
       return next(new Errorhandler(500, "Internal server Error"));

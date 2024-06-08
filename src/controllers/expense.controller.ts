@@ -420,11 +420,12 @@ export const Get_Expense_monthly_Graph = catchAsync(
 export const getfullyearreport = catchAsync(
   async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
-      const { year } = req.body;
-      if (!year) {
+      const yeart = req.query.year;
+      if (!yeart) {
         return next(new Errorhandler(404, "Invalid year"));
       }
-
+      const year = parseInt(yeart.toString());
+console.log("this is year comes from frontend :",year);
       let totalExpense = 0;
       const yearlyExpensesByDay: {
         [month: string]: { [day: number]: number };

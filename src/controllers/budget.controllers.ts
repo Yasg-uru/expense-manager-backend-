@@ -148,3 +148,33 @@ export const generatemonthlyReport = catchAsync(
     }
   }
 );
+export const Getyourbudgets = catchAsync(
+  async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user?._id;
+      const page = req.query.page;
+
+      if (!page) {
+        return next(new Errorhandler(404, "page not found please enter page "));
+      }
+      const pagenumber = parseInt(page.toString() || "1");
+      const skip = (pagenumber - 1) * 10;
+      // we have limit of 10 documents only
+      const Budgets = await Budget.find({ userId }).limit(10).skip(skip);
+      if (!Budgets) {
+        return next(new Errorhandler(404, "budgets not found "));
+      }
+      const countofBudgets = await Budget.countDocuments({ userId });
+
+      const Totalpages = countofBudgets / 10;
+      res.status(200).json({
+        success: true,
+        message: "Fetched your budgets successfully",
+        Budgets,
+        Totalpages,
+      });
+    } catch (error) {
+      return next(new Errorhandler(500, "Internal Server Error"));
+    }
+  }
+);

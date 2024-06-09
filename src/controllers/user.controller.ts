@@ -87,13 +87,11 @@ export const updatepassword = catchAsync(
       const Hashedpassword = await bcrypt.hash(passwordToupdate, salt);
       user.password = Hashedpassword;
       await user.save();
-      res.status(200).json({
-        success: true,
-        message: "updated your password successfully",
-      });
+      const gettoken = await generatetoken(user);
+
+      sendtoken(res, gettoken, 200, user);
     } catch (error) {
       return next(new Errorhandler(500, "Internal Server Error"));
     }
   }
 );
-

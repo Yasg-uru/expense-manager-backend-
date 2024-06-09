@@ -166,7 +166,7 @@ export const Getyourbudgets = catchAsync(
       }
       const countofBudgets = await Budget.countDocuments({ userId });
 
-      const Totalpages = countofBudgets / 10;
+      const Totalpages =Math.ceil( countofBudgets / 10);
       res.status(200).json({
         success: true,
         message: "Fetched your budgets successfully",

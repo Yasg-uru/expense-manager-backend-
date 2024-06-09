@@ -11,7 +11,9 @@ export const createbudget = catchAsync(
   async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?._id;
-      const existingbudget = await Budget.find(req.body);
+      const { category, month, year } = req.body;
+
+      const existingbudget = await Budget.find({ category, month, year });
       if (existingbudget.length !== 0) {
         return next(
           new Errorhandler(
@@ -96,7 +98,7 @@ export const deletebudget = catchAsync(
 
 export const generatemonthlyReport = catchAsync(
   async (req: RequestWithUser, res: Response, next: NextFunction) => {
-    try {
+    // try {
       const userId = req.user?._id;
       const { month, year, category } = req.body;
       let budgetquery: BudgetQuery = { userId, month, year, category };
@@ -123,29 +125,31 @@ export const generatemonthlyReport = catchAsync(
       let budgetlimit: number = budgets.limit;
 
       let totalexpense: number = 0;
-      const expensebycategory: { [key: string]: number } = {};
+      // const expensebycategory: { [key: string]: number } = {};
 
       expenses.forEach((expense) => {
         totalexpense += expense.amount;
-        if (!expensebycategory[expense.category]) {
-          expensebycategory[expense.category] = expense.amount;
-        } else {
-          expensebycategory[expense.category] += expense.amount;
-        }
+        // if (!expensebycategory[expense.category]) {
+        //   expensebycategory[expense.category] = expense.amount;
+        // } else {
+        //   expensebycategory[expense.category] += expense.amount;
+        // }
       });
+
       const percentageUsage = (totalexpense / budgetlimit) * 100;
 
       res.status(200).json({
         success: true,
         message: "successfully",
         budgetlimit,
-        expensebycategory,
+
         remainingbudget: budgetlimit - totalexpense,
         percentageUsage,
       });
-    } catch (error) {
-      return next(new Errorhandler(500, "Internal server Error"));
-    }
+    // } catch (error) {
+    //   console.log("this is a error:",error)
+    //   return next(new Errorhandler(500, "Internal server Error"));
+    // }
   }
 );
 export const Getyourbudgets = catchAsync(
@@ -166,7 +170,7 @@ export const Getyourbudgets = catchAsync(
       }
       const countofBudgets = await Budget.countDocuments({ userId });
 
-      const Totalpages =Math.ceil( countofBudgets / 10);
+      const Totalpages = Math.ceil(countofBudgets / 10);
       res.status(200).json({
         success: true,
         message: "Fetched your budgets successfully",

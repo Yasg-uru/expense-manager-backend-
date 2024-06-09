@@ -15,7 +15,7 @@ const expenseSchema = new Schema<Expense & Document>({
   date: { type: Date, required: true },
   description: { type: String },
   recurring: { type: Boolean, default: false },
-  currency: { type: String, required: true },
+  currency: { type: String},
 });
 const expensemodel = model("Expense", expenseSchema);
 export default expensemodel;

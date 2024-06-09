@@ -5,7 +5,7 @@ const budgetrouter = Router();
 budgetrouter.post('/create',isAuthenticated,createbudget);
 budgetrouter.put('/update/:id',isAuthenticated,updatebudget);
 budgetrouter.delete('/delete/:id',isAuthenticated,deletebudget);
-budgetrouter.get('/monthly',isAuthenticated,generatemonthlyReport);
+budgetrouter.post('/monthly',isAuthenticated,generatemonthlyReport);
 budgetrouter.get('/Budgets',isAuthenticated,Getyourbudgets);
 
 

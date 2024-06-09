@@ -24,6 +24,7 @@ export const createExpense = catchAsync(
 
       const { amount, category, date, description, recurring, currency } =
         req.body;
+        console.log("this is a req body:",req.body)
       const expense = await Expense.create({
         userId: userid,
         amount,

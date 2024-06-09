@@ -7,6 +7,9 @@ import sendtoken from "../utils/sendtoken";
 import catchAsync from "../middleware/catchasyn.middleware";
 import { RequestWithUser } from "../middleware/Auth.middleware";
 import Errorhandler from "../utils/ErrorHandler";
+import crypto from "crypto";
+import { sendResetMail } from "../utils/nodemailer";
+
 export const registeruser = async (req: Request, res: Response) => {
   const { name, email, password } = req.body;
 
@@ -92,6 +95,54 @@ export const updatepassword = catchAsync(
       sendtoken(res, gettoken, 200, user);
     } catch (error) {
       return next(new Errorhandler(500, "Internal Server Error"));
+    }
+  }
+);
+
+export const ForgotPassword = catchAsync(
+  async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const { email } = req.body;
+      const user = await User.findOne({ email });
+      if (!user) {
+        return next(new Errorhandler(404, "user not found"));
+      }
+      const token = crypto.randomBytes(20).toString("hex");
+      user.resetPasswordToken = token;
+      user.resetPasswordTokenExpire = new Date(Date.now() + 3600000);
+      await user.save();
+      await sendResetMail(email, token);
+      res.status(200).json({
+        success: true,
+        message: "Mail sent successfully",
+      });
+    } catch (error) {
+      return next(new Errorhandler(500, "Internal Server Error"));
+    }
+  }
+);
+export const ResetPassword = catchAsync(
+  async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const { token, password } = req.body;
+      const user = await User.findOne({
+        resetPasswordToken: token,
+        resetPasswordTokenExpire: { $gt: new Date() },
+      });
+      if (!user) {
+        return next(new Errorhandler(404, "user not found"));
+      }
+      const Hashedpassword = await bcrypt.hash(password, 10);
+
+      user.password = Hashedpassword;
+      user.resetPasswordToken = undefined;
+      user.resetPasswordTokenExpire = undefined;
+      await user.save();
+      res.status(200).json({
+        message: "successfully updated password",
+      });
+    } catch (error) {
+      return next(new Errorhandler(500, "Internal server error"));
     }
   }
 );

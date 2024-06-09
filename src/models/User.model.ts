@@ -1,4 +1,4 @@
-import { Schema, model,Types } from "mongoose";
+import { Schema, model, Types } from "mongoose";
 import validator from "validator";
 
 export interface Iuser extends Document {
@@ -10,6 +10,8 @@ export interface Iuser extends Document {
   role: "user" | "admin";
   profileurl: string;
   currency: string;
+  resetPasswordToken?: string;
+  resetPasswordTokenExpire?: Date;
 }
 const userschema = new Schema<Iuser>({
   name: {
@@ -43,6 +45,12 @@ const userschema = new Schema<Iuser>({
   currency: {
     type: String,
     default: "USD",
+  },
+  resetPasswordToken: {
+    type: String,
+  },
+  resetPasswordTokenExpire: {
+    type: Date,
   },
 });
 

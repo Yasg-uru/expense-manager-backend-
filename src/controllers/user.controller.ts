@@ -124,7 +124,9 @@ export const ForgotPassword = catchAsync(
 export const ResetPassword = catchAsync(
   async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
-      const { token, password } = req.body;
+      const { token } = req.params;
+
+      const { password } = req.body;
       const user = await User.findOne({
         resetPasswordToken: token,
         resetPasswordTokenExpire: { $gt: new Date() },

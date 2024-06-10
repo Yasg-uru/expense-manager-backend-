@@ -40,9 +40,21 @@ import UserModel from "../models/User.model";
 import ErrorHandler from "../utils/ErrorHandler";
 import JwtDecodedUser from "../types/jwtDecodedUser";
 import { Iuser } from "../models/User.model";
-
+interface MulterFile {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  size: number;
+  destination: string;
+  filename: string;
+  path: string;
+  buffer: Buffer;
+  stream:any
+}
 export interface RequestWithUser extends Request {
   user?: Iuser | null;
+  file?:MulterFile | undefined;
 }
 
 export const isAuthenticated = async (

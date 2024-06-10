@@ -1,6 +1,5 @@
 import User from "../models/User.model";
 import { NextFunction, Request, Response } from "express";
-
 import bcrypt from "bcryptjs";
 import generatetoken from "../utils/generateToken";
 import sendtoken from "../utils/sendtoken";
@@ -9,50 +8,62 @@ import { RequestWithUser } from "../middleware/Auth.middleware";
 import Errorhandler from "../utils/ErrorHandler";
 import crypto from "crypto";
 import { sendResetMail } from "../utils/nodemailer";
+import { UploadOnCloudinary } from "../utils/cloudinary";
 
-export const registeruser = async (req: Request, res: Response) => {
+export const registeruser = async (req: RequestWithUser, res: Response) => {
   const { name, email, password } = req.body;
 
   const hashedpassword = await bcrypt.hash(password, 10);
-  const user = await User.create({
-    name,
-    email,
-    password: hashedpassword,
-  });
+  let user;
+  if (req.file && req.file.path) {
+    const cloudinary = await UploadOnCloudinary(req.file.path);
+    const profileurl=cloudinary?.secure_url;
+    
+    user = await User.create({
+      name,
+      email,
+      password: hashedpassword,
+      profileurl,
+    });
+  } else {
+    user = await User.create({
+      name,
+      email,
+      password: hashedpassword,
+    });
+  }
   const gettoken = await generatetoken(user);
 
   sendtoken(res, gettoken, 200, user);
 };
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res.status(404).json({
-        message: "please enter email or password",
-      });
+      return next(
+        new Errorhandler(404, "please Enter valid email and password")
+      );
     }
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({
-        message: "Invalid credentials",
-      });
+      return next(new Errorhandler(404, "Invalid Credentials"));
     }
     const ismatched: boolean = await bcrypt.compare(password, user.password);
     if (!ismatched) {
-      res.status(404).json({
-        message: "Invalid email or password",
-      });
+      return next(new Errorhandler(404, "Invalid Email or password"));
     }
     const gettoken = await generatetoken(user);
     sendtoken(res, gettoken, 200, user);
   } catch (error) {
-    res.status(500).json({
-      message: "Internal server Error",
-    });
+    return next(new Errorhandler(500, "Internal server Error"));
   }
 };
-export async function logout(req:RequestWithUser,res: Response) {
+export async function logout(req: RequestWithUser, res: Response) {
   try {
     res.cookie("token", null, {
       expires: new Date(0),

@@ -52,7 +52,7 @@ export const login = async (req: Request, res: Response) => {
     });
   }
 };
-export async function logout(res: Response) {
+export async function logout(req:RequestWithUser,res: Response) {
   try {
     res.cookie("token", null, {
       expires: new Date(0),

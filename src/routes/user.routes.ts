@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  DeleteAccount,
   ForgotPassword,
   ResetPassword,
   login,
@@ -10,12 +11,13 @@ import {
 import { isAuthenticated } from "../middleware/Auth.middleware";
 import upload from "../middleware/multer.middleware";
 
-const router: Router = Router();
-router.route("/register").post(upload.single("profileurl"),registeruser);
-router.route("/login").post(login);
-router.route("/logout").post(isAuthenticated,logout);
-router.put("/updatepassword", isAuthenticated, updatepassword);
-router.post("/forgotpassword", ForgotPassword);
-router.post("/resetpassword/:token", ResetPassword);
+const UserRouter: Router = Router();
+UserRouter.route("/register").post(upload.single("profileurl"), registeruser);
+UserRouter.route("/login").post(login);
+UserRouter.route("/logout").post(isAuthenticated, logout);
+UserRouter.delete("/delete", isAuthenticated, DeleteAccount);
+UserRouter.put("/updatepassword", isAuthenticated, updatepassword);
+UserRouter.post("/forgotpassword", ForgotPassword);
+UserRouter.post("/resetpassword/:token", ResetPassword);
 
-export default router;
+export default UserRouter;

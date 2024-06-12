@@ -17,8 +17,8 @@ export const registeruser = async (req: RequestWithUser, res: Response) => {
   let user;
   if (req.file && req.file.path) {
     const cloudinary = await UploadOnCloudinary(req.file.path);
-    const profileurl=cloudinary?.secure_url;
-    
+    const profileurl = cloudinary?.secure_url;
+
     user = await User.create({
       name,
       email,
@@ -153,6 +153,25 @@ export const ResetPassword = catchAsync(
       await user.save();
       res.status(200).json({
         message: "successfully updated password",
+      });
+    } catch (error) {
+      return next(new Errorhandler(500, "Internal server error"));
+    }
+  }
+);
+
+export const DeleteAccount = catchAsync(
+  async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const id = req.user?._id;
+      const user = await User.findById(id);
+      if (!user) {
+        return next(new Errorhandler(404, "user not found"));
+      }
+      User.findByIdAndDelete(id);
+      res.status(200).json({
+        success: true,
+        messaage: "successfully deleted your account",
       });
     } catch (error) {
       return next(new Errorhandler(500, "Internal server error"));

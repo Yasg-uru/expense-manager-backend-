@@ -168,13 +168,71 @@ export const DeleteAccount = catchAsync(
       if (!user) {
         return next(new Errorhandler(404, "user not found"));
       }
-      User.findByIdAndDelete(id);
+      await User.findByIdAndDelete(id);
       res.status(200).json({
         success: true,
         messaage: "successfully deleted your account",
       });
     } catch (error) {
       return next(new Errorhandler(500, "Internal server error"));
+    }
+  }
+);
+export const UpdateProfilePicture = catchAsync(
+  async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const id = req.user?._id;
+      if (!req.file || !req.file.path) {
+        return next(new Errorhandler(404, "Image Not Provided"));
+      }
+      const cloudinary: any = await UploadOnCloudinary(req.file.path);
+      const profileurl = cloudinary?.secure_url;
+      const user = await User.findByIdAndUpdate(id, {
+        profileurl,
+      });
+      if (!user) {
+        return next(new Errorhandler(404, "User not updated "));
+      }
+      res.status(200).json({
+        success: true,
+        message: "Image changed successfully",
+        user,
+      });
+    } catch (error) {
+      console.log("this is a error:", error);
+      return next(new Errorhandler(500, "Internal Server Error"));
+    }
+  }
+);
+export const UpdateProfile = catchAsync(
+  async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const id = req.user?._id;
+      const user = await User.findByIdAndUpdate(id, req.body, {
+        new: true,
+      });
+      res.status(200).json({
+        success: true,
+        message: "Updated your changes successfully",
+        user,
+      });
+    } catch (error) {
+      return next(new Errorhandler(500, "Internal sever error"));
+    }
+  }
+);
+export const GetUserInfo = catchAsync(
+  async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const id = req.user?._id;
+      const user = await User.findById(id);
+      res.status(200).json({
+        success: true,
+        message: "Fetched user data successfully",
+        user,
+      });
+    } catch (error) {
+      return next(new Errorhandler(500, "Internal Server Error"));
     }
   }
 );

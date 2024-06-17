@@ -17,7 +17,7 @@ import upload from "../middleware/multer.middleware";
 const UserRouter: Router = Router();
 UserRouter.route("/register").post(upload.single("profileurl"), registeruser);
 UserRouter.route("/login").post(login);
-UserRouter.route("/logout").post(isAuthenticated, logout);
+UserRouter.route("/logout").post( logout);
 UserRouter.put("/changeProfile",isAuthenticated,upload.single("profileurl"),UpdateProfilePicture);
 UserRouter.put("/update",isAuthenticated,UpdateProfile);
 

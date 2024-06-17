@@ -7,8 +7,10 @@ const sendtoken = (
   user: Iuser
 ) => {
   const options = {
-    exprires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-    httpOnly: true,
+    expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    httpOnly: false,
+    sameSite: "none" as const,
+    secure: true,
   };
   res.cookie("token", token, options).status(statuscode).json({
     success: true,
@@ -17,4 +19,3 @@ const sendtoken = (
   });
 };
 export default sendtoken;
-

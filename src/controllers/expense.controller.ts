@@ -418,7 +418,83 @@ export const Get_Expense_monthly_Graph = catchAsync(
 //     }
 //   }
 // );
-export const getfullyearreport = catchAsync(
+// export const getfullyearreport = catchAsync(
+//   async (req: RequestWithUser, res: Response, next: NextFunction) => {
+//     try {
+//       const yeart = req.query.year;
+//       if (!yeart) {
+//         return next(new Errorhandler(404, "Invalid year"));
+//       }
+//       const year = parseInt(yeart.toString());
+// console.log("this is year comes from frontend :",year);
+//       let totalExpense = 0;
+//       const yearlyExpensesByDay: {
+//         [month: string]: { [day: number]: number };
+//       } = {}; // Nested object for daily expenses
+//       const userId = req.user?._id;
+
+//       // Iterate over each month of the year
+//       const monthNames = [
+//         "January",
+//         "February",
+//         "March",
+//         "April",
+//         "May",
+//         "June",
+//         "July",
+//         "August",
+//         "September",
+//         "October",
+//         "November",
+//         "December",
+//       ]; // Month names array
+
+//       for (let month = 0; month < 12; month++) {
+//         // Calculate the start and end dates for the current month, handling leap year
+//         const startDate = new Date(year, month, 1);
+//         const endDate = new Date(year, month + 1, 0);
+//         endDate.setDate(
+//           endDate.getDate() +
+//             (endDate.getMonth() === 1 && endDate.getDate() === 29 ? 1 : 0)
+//         ); // Adjust for leap year in February
+
+//         yearlyExpensesByDay[monthNames[month]] = {}; // Initialize empty object for the month
+
+//         // Iterate over each day of the current month
+//         for (let day = 1; day <= endDate.getDate(); day++) {
+//           const dayStart = new Date(year, month, day);
+//           const dayEnd = new Date(dayStart.getTime());
+//           dayEnd.setDate(dayEnd.getDate() + 1); // Set end of day to next day at midnight
+
+//           // Find expenses for the user within the current day
+//           const expenses = await Expense.find({
+//             userId,
+//             date: { $gte: dayStart, $lte: dayEnd },
+//           });
+
+//           const dayTotal = expenses.reduce(
+//             (acc, expense) => acc + expense.amount,
+//             0
+//           ); // Calculate daily total expense
+
+//           yearlyExpensesByDay[monthNames[month]][day] = dayTotal; // Add daily expense to object
+//         }
+//       }
+
+//       totalExpense = calculateTotalExpense(yearlyExpensesByDay); // Function to calculate total expense from nested object
+
+//       res.status(200).json({
+//         success: true,
+//         message: "Fetched your yearly details",
+//         yearlyExpensesByDay,
+//         totalExpense,
+//       });
+//     } catch (error) {
+//       return next(new Errorhandler(500, "Internal server error"));
+//     }
+//   }
+// );
+export const getFullyearReport = catchAsync(
   async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const yeart = req.query.year;
@@ -426,14 +502,40 @@ export const getfullyearreport = catchAsync(
         return next(new Errorhandler(404, "Invalid year"));
       }
       const year = parseInt(yeart.toString());
-console.log("this is year comes from frontend :",year);
-      let totalExpense = 0;
-      const yearlyExpensesByDay: {
-        [month: string]: { [day: number]: number };
-      } = {}; // Nested object for daily expenses
       const userId = req.user?._id;
 
-      // Iterate over each month of the year
+      const startOfYear = new Date(year, 0, 1);
+      const endOfYear = new Date(year, 11, 31, 23, 59, 59);
+
+      // MongoDB aggregation pipeline
+      const expenses = await Expense.aggregate([
+        {
+          $match: {
+            userId,
+            date: {
+              $gte: startOfYear,
+              $lte: endOfYear,
+            },
+          },
+        },
+        {
+          $group: {
+            _id: {
+              month: { $month: "$date" },
+              day: { $dayOfMonth: "$date" },
+            },
+            dailyTotal: { $sum: "$amount" },
+          },
+        },
+        {
+          $sort: { "_id.month": 1, "_id.day": 1 },
+        },
+      ]);
+
+      const yearlyExpensesByDay: {
+        [month: string]: { [day: number]: number };
+      } = {};
+
       const monthNames = [
         "January",
         "February",
@@ -447,41 +549,17 @@ console.log("this is year comes from frontend :",year);
         "October",
         "November",
         "December",
-      ]; // Month names array
+      ];
 
-      for (let month = 0; month < 12; month++) {
-        // Calculate the start and end dates for the current month, handling leap year
-        const startDate = new Date(year, month, 1);
-        const endDate = new Date(year, month + 1, 0);
-        endDate.setDate(
-          endDate.getDate() +
-            (endDate.getMonth() === 1 && endDate.getDate() === 29 ? 1 : 0)
-        ); // Adjust for leap year in February
-
-        yearlyExpensesByDay[monthNames[month]] = {}; // Initialize empty object for the month
-
-        // Iterate over each day of the current month
-        for (let day = 1; day <= endDate.getDate(); day++) {
-          const dayStart = new Date(year, month, day);
-          const dayEnd = new Date(dayStart.getTime());
-          dayEnd.setDate(dayEnd.getDate() + 1); // Set end of day to next day at midnight
-
-          // Find expenses for the user within the current day
-          const expenses = await Expense.find({
-            userId,
-            date: { $gte: dayStart, $lte: dayEnd },
-          });
-
-          const dayTotal = expenses.reduce(
-            (acc, expense) => acc + expense.amount,
-            0
-          ); // Calculate daily total expense
-
-          yearlyExpensesByDay[monthNames[month]][day] = dayTotal; // Add daily expense to object
+      expenses.forEach(expense => {
+        const monthName = monthNames[expense._id.month - 1];
+        if (!yearlyExpensesByDay[monthName]) {
+          yearlyExpensesByDay[monthName] = {};
         }
-      }
+        yearlyExpensesByDay[monthName][expense._id.day] = expense.dailyTotal;
+      });
 
-      totalExpense = calculateTotalExpense(yearlyExpensesByDay); // Function to calculate total expense from nested object
+      const totalExpense = expenses.reduce((acc, expense) => acc + expense.dailyTotal, 0);
 
       res.status(200).json({
         success: true,
@@ -494,7 +572,6 @@ console.log("this is year comes from frontend :",year);
     }
   }
 );
-
 // Function to calculate total expense from nested object (optional)
 function calculateTotalExpense(yearlyExpensesByDay: {
   [month: string]: { [day: number]: number };

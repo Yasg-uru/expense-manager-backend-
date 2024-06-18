@@ -4,7 +4,7 @@ import {
   getTotalexpense,
   getexpensebymonth,
   getExpenseByWeek,
-  getfullyearreport,
+  getFullyearReport,
   getweeklyExpenseReportforGraph,
   Get_Expense_monthly_Graph,
 } from "../controllers/expense.controller";
@@ -19,6 +19,6 @@ router.get("/prevweekreport", isAuthenticated, getweeklyExpenseReportforGraph);
 router.get("/monthly", isAuthenticated, getexpensebymonth);
 router.get("/monthly_graph",isAuthenticated,Get_Expense_monthly_Graph);
 // router.get('/')
-router.get("/report", isAuthenticated, getfullyearreport);
+router.get("/report", isAuthenticated, getFullyearReport);
 
 export default router;

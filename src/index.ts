@@ -13,7 +13,7 @@ import budgetrouter from "./routes/Budget.routes";
 
 const app = express();
 app.use(cors({
-  origin:"https://expense-manager-frontend-nine.vercel.app",
+  origin:["https://expense-manager-frontend-nine.vercel.app","http://localhost:5173"],
   credentials:true
 }));
 app.use(cookieParser());

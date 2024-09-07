@@ -7,7 +7,7 @@ import Errorhandler from "../utils/ErrorHandler";
 import { ExpenseQuery, BudgetQuery } from "../types/categorytypes";
 import Expense from "../models/Expense.model";
 
-export const createbudget = catchAsync(
+export const createbudget = 
   async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?._id;
@@ -32,11 +32,11 @@ export const createbudget = catchAsync(
         budget,
       });
     } catch (error) {
-      return next(new Errorhandler(500, "Internal server Error"));
+    next();
     }
   }
-);
-export const updatebudget = catchAsync(
+
+export const updatebudget =
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = req.params.id;
@@ -54,11 +54,11 @@ export const updatebudget = catchAsync(
         updatebudget,
       });
     } catch (error) {
-      return next(new Errorhandler(500, "Internal server Error "));
+    next();
     }
   }
-);
-// export const getBudget = catchAsync(
+
+// export const getBudget =
 //   async (req: RequestWithUser, res: Response, next: NextFunction) => {
 //     try {
 //       const userId = req.user?._id;
@@ -77,7 +77,7 @@ export const updatebudget = catchAsync(
 //   }
 // );
 
-export const deletebudget = catchAsync(
+export const deletebudget =
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
@@ -91,14 +91,13 @@ export const deletebudget = catchAsync(
         message: "your budget deleted successfully",
       });
     } catch (error) {
-      return next(new Errorhandler(500, "Internal server Error"));
+ next();
     }
   }
-);
 
-export const generatemonthlyReport = catchAsync(
+export const generatemonthlyReport =
   async (req: RequestWithUser, res: Response, next: NextFunction) => {
-    // try {
+    try {
       const userId = req.user?._id;
       const { month, year, category } = req.body;
       let budgetquery: BudgetQuery = { userId, month, year, category };
@@ -146,13 +145,13 @@ export const generatemonthlyReport = catchAsync(
         remainingbudget: budgetlimit - totalexpense,
         percentageUsage,
       });
-    // } catch (error) {
-    //   console.log("this is a error:",error)
-    //   return next(new Errorhandler(500, "Internal server Error"));
-    // }
+    } catch (error) {
+      console.log("this is a error:",error)
+next();
+    }
   }
-);
-export const Getyourbudgets = catchAsync(
+
+export const Getyourbudgets =
   async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?._id;
@@ -178,7 +177,7 @@ export const Getyourbudgets = catchAsync(
         Totalpages,
       });
     } catch (error) {
-      return next(new Errorhandler(500, "Internal Server Error"));
+     next();
     }
   }
-);
+

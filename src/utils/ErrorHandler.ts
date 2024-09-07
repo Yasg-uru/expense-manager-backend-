@@ -8,4 +8,5 @@ class Errorhandler extends Error {
         Error.captureStackTrace(this,this.constructor);
     }
 }
+
 export default Errorhandler;

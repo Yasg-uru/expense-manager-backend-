@@ -10,8 +10,9 @@ import crypto from "crypto";
 import { sendResetMail } from "../utils/nodemailer";
 import { UploadOnCloudinary } from "../utils/cloudinary";
 
-export const registeruser = async (req: RequestWithUser, res: Response) => {
-  const { name, email, password } = req.body;
+export const registeruser = async (req: RequestWithUser, res: Response,next:NextFunction) => {
+  try {
+    const { name, email, password } = req.body;
 
   const hashedpassword = await bcrypt.hash(password, 10);
   let user;
@@ -35,6 +36,10 @@ export const registeruser = async (req: RequestWithUser, res: Response) => {
   const gettoken = await generatetoken(user);
 
   sendtoken(res, gettoken, 200, user);
+  } catch (error) {
+    next();
+
+  }
 };
 
 export const login = async (
@@ -60,10 +65,11 @@ export const login = async (
     const gettoken = await generatetoken(user);
     sendtoken(res, gettoken, 200, user);
   } catch (error) {
-    return next(new Errorhandler(500, "Internal server Error"));
+    return next(error);
+
   }
 };
-export async function logout(req: RequestWithUser, res: Response) {
+export async function logout(req: RequestWithUser, res: Response,next:NextFunction) {
   try {
     res.cookie("token", null, {
       expires: new Date(0),
@@ -75,12 +81,11 @@ export async function logout(req: RequestWithUser, res: Response) {
       message: "Logged out successfully",
     });
   } catch (error) {
-    res.status(500).json({
-      message: "internal server error ",
-    });
+    next();
+
   }
 }
-export const updatepassword = catchAsync(
+export const updatepassword = 
   async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?._id;
@@ -105,12 +110,12 @@ export const updatepassword = catchAsync(
 
       sendtoken(res, gettoken, 200, user);
     } catch (error) {
-      return next(new Errorhandler(500, "Internal Server Error"));
+      next()
     }
   }
-);
 
-export const ForgotPassword = catchAsync(
+
+export const ForgotPassword = 
   async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const { email } = req.body;
@@ -128,11 +133,11 @@ export const ForgotPassword = catchAsync(
         message: "Mail sent successfully",
       });
     } catch (error) {
-      return next(new Errorhandler(500, "Internal Server Error"));
+       next();
     }
   }
-);
-export const ResetPassword = catchAsync(
+
+export const ResetPassword =
   async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const { token } = req.params;
@@ -155,12 +160,12 @@ export const ResetPassword = catchAsync(
         message: "successfully updated password",
       });
     } catch (error) {
-      return next(new Errorhandler(500, "Internal server error"));
+    next();
     }
   }
-);
 
-export const DeleteAccount = catchAsync(
+
+export const DeleteAccount = 
   async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const id = req.user?._id;
@@ -174,11 +179,11 @@ export const DeleteAccount = catchAsync(
         messaage: "successfully deleted your account",
       });
     } catch (error) {
-      return next(new Errorhandler(500, "Internal server error"));
+      next();
     }
   }
-);
-export const UpdateProfilePicture = catchAsync(
+
+export const UpdateProfilePicture = 
   async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const id = req.user?._id;
@@ -200,11 +205,10 @@ export const UpdateProfilePicture = catchAsync(
       });
     } catch (error) {
       console.log("this is a error:", error);
-      return next(new Errorhandler(500, "Internal Server Error"));
+   next();
     }
   }
-);
-export const UpdateProfile = catchAsync(
+export const UpdateProfile =
   async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const id = req.user?._id;
@@ -217,11 +221,11 @@ export const UpdateProfile = catchAsync(
         user,
       });
     } catch (error) {
-      return next(new Errorhandler(500, "Internal sever error"));
+    next();
     }
   }
-);
-export const GetUserInfo = catchAsync(
+
+export const GetUserInfo = 
   async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const id = req.user?._id;
@@ -232,7 +236,7 @@ export const GetUserInfo = catchAsync(
         user,
       });
     } catch (error) {
-      return next(new Errorhandler(500, "Internal Server Error"));
+      next();
     }
   }
-);
+

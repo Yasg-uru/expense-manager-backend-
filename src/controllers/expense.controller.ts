@@ -500,11 +500,17 @@ export const GetExpensesByDay = async (
   next: NextFunction
 ) => {
   try {
-  const { date } = req.params;
-  const expenses = await Expense.find({ date });
-  res.status(200).json({
-    expenses,
-  });
+    const { date } = req.params;
+    const expenses = await Expense.find({ date });
+    let TotalExpense = 0;
+
+    expenses.forEach((expense) => {
+      TotalExpense += expense.amount;
+    });
+    res.status(200).json({
+      expenses,
+      TotalExpense,
+    });
   } catch (error) {
     next();
   }

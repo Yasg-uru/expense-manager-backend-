@@ -12,7 +12,7 @@ const Transporter = nodemailer.createTransport({
   },
 });
 export const sendResetMail = (email: string, token: string) => {
-  const resetLink = `http://localhost:5173/reset-password/${token}`;
+  const resetLink = `https://expense-manager-frontend-nine.vercel.app/reset-password/${token}`;
   const mailOptions = {
     to: email,
     from: "passwordreset@yourapp.com",

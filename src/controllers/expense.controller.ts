@@ -24,7 +24,7 @@ export const createExpense = catchAsync(
 
       const { amount, category, date, description, recurring, currency } =
         req.body;
-        console.log("this is a req body:",req.body)
+      console.log("this is a req body:", req.body);
       const expense = await Expense.create({
         userId: userid,
         amount,
@@ -494,6 +494,21 @@ export const Get_Expense_monthly_Graph = catchAsync(
 //     }
 //   }
 // );
+export const GetExpensesByDay = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+  const { date } = req.params;
+  const expenses = await Expense.find({ date });
+  res.status(200).json({
+    expenses,
+  });
+  } catch (error) {
+    next();
+  }
+};
 export const getFullyearReport = catchAsync(
   async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
@@ -551,7 +566,7 @@ export const getFullyearReport = catchAsync(
         "December",
       ];
 
-      expenses.forEach(expense => {
+      expenses.forEach((expense) => {
         const monthName = monthNames[expense._id.month - 1];
         if (!yearlyExpensesByDay[monthName]) {
           yearlyExpensesByDay[monthName] = {};
@@ -559,7 +574,10 @@ export const getFullyearReport = catchAsync(
         yearlyExpensesByDay[monthName][expense._id.day] = expense.dailyTotal;
       });
 
-      const totalExpense = expenses.reduce((acc, expense) => acc + expense.dailyTotal, 0);
+      const totalExpense = expenses.reduce(
+        (acc, expense) => acc + expense.dailyTotal,
+        0
+      );
 
       res.status(200).json({
         success: true,

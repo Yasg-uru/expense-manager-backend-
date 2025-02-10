@@ -41,6 +41,7 @@ export const registeruser = async (
 
     sendtoken(res, gettoken, 200, user);
   } catch (error) {
+    console.log('this is  error in registering :',error)
     next();
   }
 };

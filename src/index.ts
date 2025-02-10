@@ -18,6 +18,7 @@ app.use(
     origin: [
       "https://expense-manager-frontend-nine.vercel.app",
       "http://localhost:5173",
+      "https://expen-track-frontend.vercel.app"
     ],
     credentials: true,
   })
